@@ -1,12 +1,17 @@
-﻿using Unity.Entities;
+﻿using System;
+using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.EventSystems;
 using UnityEngine.Windows;
 using Input = UnityEngine.Input;
 
 public partial class PlayerShootingSystem : SystemBase
 {
+    public event EventHandler OnShoot;
+
     protected override void OnCreate()
     {
         RequireForUpdate<Player>();
@@ -17,15 +22,15 @@ public partial class PlayerShootingSystem : SystemBase
         if (Input.GetKeyDown(KeyCode.E))
         {
             Entity playerEntity = SystemAPI.GetSingletonEntity<Player>();
-            EntityManager.SetComponentEnabled<Stunned>(playerEntity,true);
+            EntityManager.SetComponentEnabled<Stunned>(playerEntity, true);
         }
-        
+
         if (Input.GetKeyDown(KeyCode.D))
         {
             Entity playerEntity = SystemAPI.GetSingletonEntity<Player>();
-            EntityManager.SetComponentEnabled<Stunned>(playerEntity,false);
+            EntityManager.SetComponentEnabled<Stunned>(playerEntity, false);
         }
-        
+
         if (!Input.GetKeyDown(KeyCode.Space))
         {
             return;
@@ -33,8 +38,9 @@ public partial class PlayerShootingSystem : SystemBase
 
         SpawnCubesConfig spawnCubesConfig = SystemAPI.GetSingleton<SpawnCubesConfig>();
         EntityCommandBuffer entityCommandBuffer = new EntityCommandBuffer(WorldUpdateAllocator);
-        
-        foreach (RefRO<LocalTransform> localTransform in SystemAPI.Query<RefRO<LocalTransform>>().WithAll<Player>().WithDisabled<Stunned>())
+
+        foreach ((RefRO<LocalTransform> localTransform ,Entity entity) in SystemAPI.Query<RefRO<LocalTransform>>().WithAll<Player>()
+                     .WithDisabled<Stunned>().WithEntityAccess())
         {
             Entity spawnedEntity = entityCommandBuffer.Instantiate(spawnCubesConfig.cubePrefabEntity);
             entityCommandBuffer.SetComponent(spawnedEntity, new LocalTransform
@@ -43,7 +49,10 @@ public partial class PlayerShootingSystem : SystemBase
                 Rotation = quaternion.identity,
                 Scale = 1f
             });
+            
+            OnShoot?.Invoke(entity, EventArgs.Empty);
         }
+
         entityCommandBuffer.Playback(EntityManager);
     }
 }
