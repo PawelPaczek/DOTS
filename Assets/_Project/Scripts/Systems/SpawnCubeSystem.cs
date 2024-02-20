@@ -14,7 +14,7 @@ public partial class SpawnCubeSystem : SystemBase
         this.Enabled = false;
 
         SpawnCubesConfig spawnCubesConfig = SystemAPI.GetSingleton<SpawnCubesConfig>();
-        // EntityManager.Instantiate()
+        
         for (int i = 0; i < spawnCubesConfig.amountToSpawn; i++)
         {
             Entity spawnedEntity = EntityManager.Instantiate(spawnCubesConfig.cubePrefabEntity);

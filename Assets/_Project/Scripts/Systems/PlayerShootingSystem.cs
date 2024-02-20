@@ -19,27 +19,44 @@ public partial class PlayerShootingSystem : SystemBase
 
     protected override void OnUpdate()
     {
-        if (Input.GetKeyDown(KeyCode.E))
-        {
-            Entity playerEntity = SystemAPI.GetSingletonEntity<Player>();
-            EntityManager.SetComponentEnabled<Stunned>(playerEntity, true);
-        }
+        HandleStunToggle();
+        HandleCubeSpawning();
+    }
 
-        if (Input.GetKeyDown(KeyCode.D))
-        {
-            Entity playerEntity = SystemAPI.GetSingletonEntity<Player>();
-            EntityManager.SetComponentEnabled<Stunned>(playerEntity, false);
-        }
+    private void HandleStunToggle()
+    {
+        Entity playerEntity = SystemAPI.GetSingletonEntity<Player>();
 
-        if (!Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.P))
         {
-            return;
+            SetPlayerStunned(playerEntity, true);
         }
+        else if (Input.GetKeyDown(KeyCode.O))
+        {
+            SetPlayerStunned(playerEntity, false);
+        }
+    }
+
+    private void SetPlayerStunned(Entity playerEntity, bool isStunned)
+    {
+        EntityManager.SetComponentEnabled<Stunned>(playerEntity, isStunned);
+    }
+
+    private void HandleCubeSpawning()
+    {
+        if (!Input.GetKeyDown(KeyCode.Space)) return;
 
         SpawnCubesConfig spawnCubesConfig = SystemAPI.GetSingleton<SpawnCubesConfig>();
         EntityCommandBuffer entityCommandBuffer = new EntityCommandBuffer(WorldUpdateAllocator);
 
-        foreach ((RefRO<LocalTransform> localTransform ,Entity entity) in SystemAPI.Query<RefRO<LocalTransform>>().WithAll<Player>()
+        SpawnCubes(spawnCubesConfig, entityCommandBuffer);
+
+        entityCommandBuffer.Playback(EntityManager);
+    }
+
+    private void SpawnCubes(SpawnCubesConfig spawnCubesConfig, EntityCommandBuffer entityCommandBuffer)
+    {
+        foreach ((RefRO<LocalTransform> localTransform, Entity entity) in SystemAPI.Query<RefRO<LocalTransform>>().WithAll<Player>()
                      .WithDisabled<Stunned>().WithEntityAccess())
         {
             Entity spawnedEntity = entityCommandBuffer.Instantiate(spawnCubesConfig.cubePrefabEntity);
@@ -49,10 +66,9 @@ public partial class PlayerShootingSystem : SystemBase
                 Rotation = quaternion.identity,
                 Scale = 1f
             });
-            
+
             OnShoot?.Invoke(entity, EventArgs.Empty);
         }
-
-        entityCommandBuffer.Playback(EntityManager);
     }
+
 }

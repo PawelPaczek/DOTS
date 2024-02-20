@@ -8,10 +8,11 @@ using UnityEngine;
 public class ShootPopupSpawner : MonoBehaviour
 {
     [SerializeField] private GameObject shootPopupPrefab;
+    private PlayerShootingSystem playerShootingSystem;
 
     private void Start()
     {
-        PlayerShootingSystem playerShootingSystem =
+        playerShootingSystem =
             World.DefaultGameObjectInjectionWorld.GetExistingSystemManaged<PlayerShootingSystem>();
 
         playerShootingSystem.OnShoot += PlayerShootingSystemOnShoot;
@@ -23,5 +24,10 @@ public class ShootPopupSpawner : MonoBehaviour
         LocalTransform localTransform =
             World.DefaultGameObjectInjectionWorld.EntityManager.GetComponentData<LocalTransform>(playerEntity);
         Instantiate(shootPopupPrefab, localTransform.Position, Quaternion.identity);
+    }
+
+    private void OnDisable()
+    {
+        playerShootingSystem.OnShoot -= PlayerShootingSystemOnShoot;
     }
 }

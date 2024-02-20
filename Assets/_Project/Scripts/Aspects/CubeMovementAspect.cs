@@ -4,7 +4,7 @@ using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
 
-public readonly partial struct RotatingMovingCubeAspect : IAspect
+public readonly partial struct CubeMovementAspect : IAspect
 {
     public readonly RefRW<LocalTransform> localTransform;
     public readonly RefRO<RotateSpeedValue> rotateSpeedValue;
